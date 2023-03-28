@@ -49,6 +49,8 @@ def main():
 
     # OpenAI keeps complaining that `gpt-3.5-turbo` is "busy"
     # use `text-davinci-003` instead for now
+    # caveat: `text-davinci-003` is MUCH more expensive than `gpt-3.5-turbo`
+
     # llm_predictor = LLMPredictor(llm=ChatOpenAI(model_name="gpt-3.5-turbo"))
     llm_predictor = LLMPredictor(llm=OpenAI(model_name="text-davinci-003"))
 
