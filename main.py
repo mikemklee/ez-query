@@ -32,11 +32,14 @@ def main():
 
     start_time = time.time()
 
+    documents_file_name = f"{args.subdomain}.documents.pickle"
+    index_file_name = f"{args.subdomain}.index.json"
+
     print("\nStep 1: Grabbing zendesk articles")
     # Check if the documents are available in a local file
-    if os.path.exists("documents.pickle"):
+    if os.path.exists(documents_file_name):
         print("  - found saved documents, loading from there")
-        with open("documents.pickle", "rb") as f:
+        with open(documents_file_name, "rb") as f:
             documents = pickle.load(f)
     else:
         # fetch data from Zendesk
@@ -50,24 +53,24 @@ def main():
 
         # Save the documents to a local file
         print("  - saving documents to local file")
-        with open("documents.pickle", "wb") as f:
+        with open(documents_file_name, "wb") as f:
             pickle.dump(documents, f)
 
     # setup model
     print("\nStep 2: Setting up LLM")
 
+    llm_predictor = LLMPredictor(llm=ChatOpenAI(model_name="gpt-3.5-turbo"))
+
     # OpenAI keeps complaining that `gpt-3.5-turbo` is "busy"
     # use `text-davinci-003` instead for now
     # caveat: `text-davinci-003` is MUCH more expensive than `gpt-3.5-turbo`
-
-    # llm_predictor = LLMPredictor(llm=ChatOpenAI(model_name="gpt-3.5-turbo"))
-    llm_predictor = LLMPredictor(llm=OpenAI(model_name="text-davinci-003"))
+    # llm_predictor = LLMPredictor(llm=OpenAI(model_name="text-davinci-003"))
 
     print("\nStep 3: Setting up index")
     # Check if the index is available in a local file
-    if os.path.exists("index.json"):
+    if os.path.exists(index_file_name):
         print("  - found saved index, loading from there")
-        index = GPTKeywordTableIndex.load_from_disk("index.json")
+        index = GPTKeywordTableIndex.load_from_disk(index_file_name)
     else:
         # setup index
         print("  - no saved index, building one from documents")
@@ -75,7 +78,7 @@ def main():
 
         # Save the index to a local file
         print("  - saving index to local file")
-        index.save_to_disk("index.json")
+        index.save_to_disk(index_file_name)
 
     # run query
     print("\nStep 4: Running query")

@@ -4,5 +4,5 @@ myenv/
 
 .env*
 
-documents.pickle
-index.json
+**.documents.pickle
+**.index.json
