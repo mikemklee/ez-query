@@ -13,20 +13,26 @@ def main():
     load_dotenv()
 
     parser = argparse.ArgumentParser(
-        description="Query PartnerStack support center",
+        description="Query zendesk articles",
+    )
+
+    parser.add_argument(
+        "--subdomain",
+        type=str,
+        help="Zendesk subdomain to fetch articles from",
     )
 
     parser.add_argument(
         "--question",
         type=str,
-        help="What you want to find out from the support center docs",
+        help="What you want to find out from the articles",
     )
 
     args = parser.parse_args()
 
     start_time = time.time()
 
-    print("\nStep 1: Grabbing support docs")
+    print("\nStep 1: Grabbing zendesk articles")
     # Check if the documents are available in a local file
     if os.path.exists("documents.pickle"):
         print("  - found saved documents, loading from there")
@@ -36,7 +42,10 @@ def main():
         # fetch data from Zendesk
         print("  - no saved documents, fetching from Zendesk")
         ZendeskReader = download_loader("ZendeskReader")
-        loader = ZendeskReader(zendesk_subdomain="growsumo", locale="en-us")
+        loader = ZendeskReader(
+            zendesk_subdomain=args.subdomain,
+            locale="en-us",
+        )
         documents = loader.load_data()
 
         # Save the documents to a local file
