@@ -1,4 +1,4 @@
-# Query Zendesk articles with LLM
+# ez-query: Query Zendesk articles with LLM
 
 ### How to run locally
 
