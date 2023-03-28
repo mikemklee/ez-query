@@ -1,6 +1,10 @@
 import argparse
+import os
+import pickle
+import time
 
 from dotenv import load_dotenv
+from langchain import OpenAI
 from langchain.chat_models import ChatOpenAI
 from llama_index import GPTKeywordTableIndex, LLMPredictor, download_loader
 
@@ -20,20 +24,58 @@ def main():
 
     args = parser.parse_args()
 
-    # fetch data from Zendesk
-    ZendeskReader = download_loader("ZendeskReader")
-    loader = ZendeskReader(zendesk_subdomain="growsumo", locale="en-us")
-    documents = loader.load_data()
+    start_time = time.time()
 
-    # setup model and create index
-    llm_predictor = LLMPredictor(llm=ChatOpenAI(model_name="gpt-3.5-turbo"))
-    index = GPTKeywordTableIndex(documents, llm_predictor=llm_predictor)
+    print("\nStep 1: Grabbing support docs")
+    # Check if the documents are available in a local file
+    if os.path.exists("documents.pickle"):
+        print("  - found saved documents, loading from there")
+        with open("documents.pickle", "rb") as f:
+            documents = pickle.load(f)
+    else:
+        # fetch data from Zendesk
+        print("  - no saved documents, fetching from Zendesk")
+        ZendeskReader = download_loader("ZendeskReader")
+        loader = ZendeskReader(zendesk_subdomain="growsumo", locale="en-us")
+        documents = loader.load_data()
+
+        # Save the documents to a local file
+        print("  - saving documents to local file")
+        with open("documents.pickle", "wb") as f:
+            pickle.dump(documents, f)
+
+    # setup model
+    print("\nStep 2: Setting up LLM")
+
+    # OpenAI keeps complaining that `gpt-3.5-turbo` is "busy"
+    # use `text-davinci-003` instead for now
+    # llm_predictor = LLMPredictor(llm=ChatOpenAI(model_name="gpt-3.5-turbo"))
+    llm_predictor = LLMPredictor(llm=OpenAI(model_name="text-davinci-003"))
+
+    print("\nStep 3: Setting up index")
+    # Check if the index is available in a local file
+    if os.path.exists("index.json"):
+        print("  - found saved index, loading from there")
+        index = GPTKeywordTableIndex.load_from_disk("index.json")
+    else:
+        # setup index
+        print("  - no saved index, building one from documents")
+        index = GPTKeywordTableIndex(documents, llm_predictor=llm_predictor)
+
+        # Save the index to a local file
+        print("  - saving index to local file")
+        index.save_to_disk("index.json")
 
     # run query
+    print("\nStep 4: Running query")
     response = index.query(args.question)
 
-    print("\nQUESTION", args.question)
-    print("\nRESPONSE", response)
+    # print results
+    print("\nQUESTION:", args.question)
+    print("\nRESPONSE:", response)
+
+    end_time = time.time()
+    print("\nTotal duration:", end_time - start_time, "seconds")
 
 
 if __name__ == "__main__":
