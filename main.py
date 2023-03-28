@@ -7,7 +7,12 @@ from dotenv import load_dotenv
 from llama_index.optimization.optimizer import SentenceEmbeddingOptimizer
 from langchain import OpenAI
 from langchain.chat_models import ChatOpenAI
-from llama_index import GPTKeywordTableIndex, LLMPredictor, download_loader
+from llama_index import (
+    GPTKeywordTableIndex,
+    GPTSimpleKeywordTableIndex,
+    LLMPredictor,
+    download_loader,
+)
 
 
 def main():
@@ -71,11 +76,11 @@ def main():
     # Check if the index is available in a local file
     if os.path.exists(index_file_name):
         print("  - found saved index, loading from there")
-        index = GPTKeywordTableIndex.load_from_disk(index_file_name)
+        index = GPTSimpleKeywordTableIndex.load_from_disk(index_file_name)
     else:
         # setup index
         print("  - no saved index, building one from documents")
-        index = GPTKeywordTableIndex(
+        index = GPTSimpleKeywordTableIndex(
             documents=documents,
             llm_predictor=llm_predictor,
         )
