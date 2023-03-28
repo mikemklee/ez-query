@@ -4,6 +4,7 @@ import pickle
 import time
 
 from dotenv import load_dotenv
+from llama_index.optimization.optimizer import SentenceEmbeddingOptimizer
 from langchain import OpenAI
 from langchain.chat_models import ChatOpenAI
 from llama_index import GPTKeywordTableIndex, LLMPredictor, download_loader
@@ -74,7 +75,10 @@ def main():
     else:
         # setup index
         print("  - no saved index, building one from documents")
-        index = GPTKeywordTableIndex(documents, llm_predictor=llm_predictor)
+        index = GPTKeywordTableIndex(
+            documents=documents,
+            llm_predictor=llm_predictor,
+        )
 
         # Save the index to a local file
         print("  - saving index to local file")
@@ -82,7 +86,12 @@ def main():
 
     # run query
     print("\nStep 4: Running query")
-    response = index.query(args.question)
+    response = index.query(
+        args.question,
+        optimizer=SentenceEmbeddingOptimizer(
+            percentile_cutoff=0.75,
+        ),
+    )
 
     # print results
     print("\nQUESTION:", args.question)
